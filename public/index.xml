@@ -17,7 +17,10 @@
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
       <guid>/projects/</guid>
-      <description></description>
+      <description>Projects Here are some projects I have recently completed:
+  Exploratory Data Analysis with Tidyverse Tools
+  Modeling, Testing, and Classification
+  </description>
     </item>
     
     <item>
@@ -74,6 +77,15 @@ Follow the following steps:
       <description>Move static content to static Jekyll has a rule that any directory not starting with _ will be copied as-is to the _site output. Hugo keeps all static content under static. You should therefore move it all there. With Jekyll, something that looked like
 ▾ &amp;lt;root&amp;gt;/ ▾ images/ logo.png  should become
 ▾ &amp;lt;root&amp;gt;/ ▾ static/ ▾ images/ logo.png  Additionally, you&amp;rsquo;ll want any files that should reside at the root (such as CNAME) to be moved to static.</description>
+    </item>
+    
+    <item>
+      <title>Project 2: Modeling, Testing, and Predicting</title>
+      <link>/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project2/</guid>
+      <description>Modeling Australia Climate Data: This project will focus on analyzing climate in Australia. Climate data for temperature and rainfall was gathered from the Australian Bureau of Meterology (BoM) at 5 major Australian cities: Sydney, Perth, Brisbane, Canberra, and Melbourne. Minimum and maximum temperature in celsius was sourced from BoM Climate Data Online. The temperature dataset includes the variables city_name, data, temperature, temp_type (min, max), and site_name (weather station). The rainfall dataset contains the weather station_code and station_name, city_name, year, month, day, rainfall in millimeters, period (how many days rainfall was collected across), quality (certified quality or not), latitude, and longitude.</description>
     </item>
     
   </channel>

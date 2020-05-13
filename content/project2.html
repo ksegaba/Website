@@ -1,0 +1,558 @@
+---
+title: 'Project 2: Modeling, Testing, and Predicting'
+author: "SDS348"
+date: ''
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+
+
+<div id="modeling" class="section level1">
+<h1>Modeling</h1>
+<div id="australia-climate-data" class="section level2">
+<h2>Australia Climate Data:</h2>
+<p>This project will focus on analyzing climate in Australia. Climate data for temperature and rainfall was gathered from the Australian Bureau of Meterology (BoM) at 5 major Australian cities: Sydney, Perth, Brisbane, Canberra, and Melbourne. Minimum and maximum temperature in celsius was sourced from BoM Climate Data Online. The temperature dataset includes the variables city_name, data, temperature, temp_type (min, max), and site_name (weather station). The rainfall dataset contains the weather station_code and station_name, city_name, year, month, day, rainfall in millimeters, period (how many days rainfall was collected across), quality (certified quality or not), latitude, and longitude. The temperature (temp) dataset has 528,278 entries dating back to 1910 and the rainfall (rain) dataset has 179,273 entries dating back to 1967. After joining the datasets using inner_join and removing missing values, 83,913 observations were left.</p>
+<pre class="r"><code># upload data
+rain &lt;- readr::read_csv(&#39;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-07/rainfall.csv&#39;)
+temp &lt;- readr::read_csv(&#39;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-07/temperature.csv&#39;)
+
+# tidy the data
+temp &lt;- temp %&gt;% separate(date, c(&quot;year&quot;,&quot;month&quot;, &quot;day&quot;), sep = &quot;-&quot;) # separate data column
+
+rain$city_name &lt;- toupper(rain$city_name) # coerce city names to uppercase
+
+temp[, 2:4] &lt;- sapply(temp[, 2:4], as.character) # coerce into numeric
+rain[, 3:5] &lt;- sapply(rain[, 3:5], as.character) # coerce into numeric
+
+# join datasets
+climate &lt;- inner_join(rain, temp, by = c(&quot;city_name&quot;, &quot;year&quot;, &quot;month&quot;, &quot;day&quot;)) %&gt;% na.omit() </code></pre>
+</div>
+<div id="manova" class="section level2">
+<h2>MANOVA</h2>
+<pre class="r"><code># assumptions
+ggplot(climate, aes(x = temperature, y = period)) + geom_point(alpha = .5) + geom_density_2d(h=2) + coord_fixed() + facet_wrap(~city_name) # multivariate normality</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-2-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># MANOVA
+man1&lt;-manova(cbind(climate$rainfall, climate$temperature, climate$period)~city_name, data=climate)
+summary(man1)</code></pre>
+<pre><code>## Df Pillai approx F num Df den Df Pr(&gt;F)
+## city_name 4 0.17024 1262 12 251724 &lt; 2.2e-16 ***
+## Residuals 83908
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code># Univariate ANOVAs - all variables were significant
+summary.aov(man1)</code></pre>
+<pre><code>## Response 1 :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## city_name 4 166102 41526 232.71 &lt; 2.2e-16 ***
+## Residuals 83908 14972814 178
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response 2 :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## city_name 4 506458 126614 3429.8 &lt; 2.2e-16 ***
+## Residuals 83908 3097520 37
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response 3 :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## city_name 4 162.3 40.569 469.15 &lt; 2.2e-16 ***
+## Residuals 83908 7255.7 0.086
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code># post-hoc tests
+pairwise.t.test(climate$rainfall, climate$city_name, p.adj=&quot;none&quot;) # rainfall</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  climate$rainfall and climate$city_name 
+## 
+##           BRISBANE CANBERRA MELBOURNE PERTH  
+## CANBERRA  &lt; 2e-16  -        -         -      
+## MELBOURNE &lt; 2e-16  &lt; 2e-16  -         -      
+## PERTH     0.52     &lt; 2e-16  &lt; 2e-16   -      
+## SYDNEY    1.9e-11  &lt; 2e-16  &lt; 2e-16   1.3e-10
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(climate$temperature, climate$city_name, p.adj=&quot;none&quot;) # temperature</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  climate$temperature and climate$city_name 
+## 
+##           BRISBANE CANBERRA MELBOURNE PERTH 
+## CANBERRA  &lt;2e-16   -        -         -     
+## MELBOURNE &lt;2e-16   0.54     -         -     
+## PERTH     &lt;2e-16   &lt;2e-16   &lt;2e-16    -     
+## SYDNEY    &lt;2e-16   &lt;2e-16   &lt;2e-16    &lt;2e-16
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(climate$period, climate$city_name, p.adj=&quot;none&quot;) # period</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  climate$period and climate$city_name 
+## 
+##           BRISBANE CANBERRA MELBOURNE PERTH  
+## CANBERRA  &lt; 2e-16  -        -         -      
+## MELBOURNE &lt; 2e-16  0.0027   -         -      
+## PERTH     &lt; 2e-16  0.0067   0.7968    -      
+## SYDNEY    &lt; 2e-16  0.8117   5.3e-07   1.1e-05
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code># adjusted p-value
+alpha &lt;- 0.05/7 ; alpha</code></pre>
+<pre><code>## [1] 0.007142857</code></pre>
+<p><em>A one-way MANOVA was conducted to determine the effect of the city (Perth, Brisbane, Sydney, Canberra, Melbourne) on three dependent variables (temperature, rainfall, period). Examination of bivariate density plots for each group revealed stark deparures from multivariate normality. Most likely homogeneity of covariances assumption is also not met. Significant differences were found among the five cities for at least one of the dependent variables, Pillia trace = 0.17024, F(12,251724) = 1262, p-value &lt; 2.2e-16.</em></p>
+<p><em>Univariate ANOVAs for each dependent variable were conducted as follow-up tests to the MANOVA, using the Bonferroni method for controlling Type I error rates for multiple comparisons. The univariate ANOVAs for temperature, rainfall, and period were also significant, F(4,83908) = 3429.8, p &lt; 2.2e-16 ; F(4,83908) = 232.71, p &lt; 2.2e-16, and F(4,83908) = 469.15, p &lt; 2.2e-16, respectively.</em></p>
+<p><em>Post hoc analysis was performed conducting pairwise comparisons to determine which city differed in temperate, rainfall, and period. All cities differed for rainfall except Perth and Brisbane after adjusting for multiple comparisons (bonferroni). For temperature, all differed except for Melbourne and Canberra after adjusting for multiple comparisons (bonferroni). For period, Perth did not differ from Melbourne, and Sydney did not differ from Canberra after adjusting for multiple comparisons (bonferroni).</em></p>
+</div>
+<div id="randomization-test" class="section level2">
+<h2>Randomization Test</h2>
+<pre class="r"><code># check mean rainfall and temperature for each city
+climate %&gt;% group_by(city_name) %&gt;% summarize(mean_rain=mean(rainfall), mean_temp=mean(temperature))</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##   city_name mean_rain mean_temp
+##   &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;
+## 1 BRISBANE       6.54      20.9
+## 2 CANBERRA       2.28      14.0
+## 3 MELBOURNE      4.75      14.0
+## 4 PERTH          6.44      15.7
+## 5 SYDNEY         7.37      18.3</code></pre>
+<pre class="r"><code># randomization test comparing rainfall in Brisbane and Perth, Australia
+rand_dist&lt;-vector()
+for(i in 1:5000){ 
+  new &lt;- data.frame(rainfall=sample(climate$rainfall),temperature=sample(climate$temperature),city=sample(climate$city_name)) 
+  rand_dist[i]&lt;-mean(new[new$city==&quot;BRISBANE&quot;,]$rainfall)-mean(new[new$city==&quot;PERTH&quot;,]$rainfall)
+}
+
+# actual
+actual &lt;- climate%&gt;%filter(city_name==c(&quot;BRISBANE&quot;,&quot;PERTH&quot;))%&gt;%group_by(city_name)%&gt;% summarize(means=mean(rainfall))%&gt;%summarize(`mean_diff:`=diff(means))
+
+# plot distribution of mean differences
+hist(rand_dist,main=&quot;&quot;,ylab=&quot;&quot;); abline(v = actual,col=&quot;red&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-3-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># p-value
+mean(rand_dist &gt; 0.116 | rand_dist &lt; -0.116)</code></pre>
+<pre><code>## [1] 0.479</code></pre>
+<p><em>The null hypothesis is that mean rainfall in millimeters is the same in Brisbane and in Perth. The alternative hypothesis is that mean rainfall in millimeters is different in Brisbane and in Perth. After performing a randomization test, we fail to reject the null hypothesis given that the p-value is 0.4662.</em></p>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>Linear Regression</h2>
+<pre class="r"><code># center temperature
+climate$temp_cent &lt;- climate$temperature - mean(climate$temperature)
+
+# linear regression
+fit &lt;- lm(rainfall~temp_cent*period*city_name, data=climate) ; summary(fit)</code></pre>
+<pre><code>##
+## Call:
+## lm(formula = rainfall ~ temp_cent * period * city_name,
+data = climate)
+##
+## Residuals:
+## Min 1Q Median 3Q Max
+## -52.99 -6.04 -3.77 0.23 319.79
+##
+## Coefficients:
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) -0.75205 0.26235 -2.867 0.00415 **
+## temp_cent 0.11392 0.03888 2.930 0.00339 **
+## period 6.01530 0.21600 27.848 &lt; 2e-16 ***
+## city_nameCANBERRA -24.74053 5.58831 -4.427 9.56e-06 ***
+## city_nameMELBOURNE 4.13981 0.61014 6.785 1.17e-11 ***
+## city_namePERTH 3.87261 0.69061 5.608 2.06e-08 ***
+## city_nameSYDNEY 15.29090 9.59600 1.593 0.11106
+## temp_cent:period 0.05660 0.03248 1.743 0.08140 .
+## temp_cent:city_nameCANBERRA 0.55538 1.03447 0.537
+0.59136
+## temp_cent:city_nameMELBOURNE 0.04513 0.11881 0.380
+0.70407
+## temp_cent:city_namePERTH 0.02392 0.14625 0.164 0.87010
+## temp_cent:city_nameSYDNEY -0.37375 1.49709 -0.250
+0.80286
+## period:city_nameCANBERRA 21.83364 5.57697 3.915 9.05e-05
+***
+## period:city_nameMELBOURNE -4.46482 0.56648 -7.882
+3.27e-15 ***
+## period:city_namePERTH -2.90075 0.65405 -4.435 9.22e-06
+***
+## period:city_nameSYDNEY -13.08472 9.59407 -1.364 0.17262
+## temp_cent:period:city_nameCANBERRA -0.69578 1.03379
+-0.673 0.50093
+## temp_cent:period:city_nameMELBOURNE -0.15480 0.11311
+-1.369 0.17114
+## temp_cent:period:city_namePERTH -0.27684 0.14196 -1.950
+0.05117 .
+## temp_cent:period:city_nameSYDNEY 0.07331 1.49677 0.049
+0.96094
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Residual standard error: 13.23 on 83893 degrees of
+freedom
+## Multiple R-squared: 0.03061, Adjusted R-squared: 0.03039
+## F-statistic: 139.4 on 19 and 83893 DF, p-value: &lt;
+2.2e-16</code></pre>
+<pre class="r"><code># plot fit
+climate %&gt;% ggplot(aes(x=period, y=rainfall)) + geom_point() + geom_smooth(method=&quot;lm&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-4-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># check assumptions
+plot(fit$fitted.values, fit$residuals) # homoskedasticity and linearity not met</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-4-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist(fit$residuals) # normality not met</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-4-3.png" width="768" style="display: block; margin: auto;" />
+<em>The coefficient estimate of the intercept is the expected average rainfall in millimeters when we consider temperature in celsius, the number of days in which rainfall was collected across (period) and city. Thus, there are -0.75205 mm of rain on average, which in reality does not make sense. With all other variables accounted for, the significant coefficient estimates for city were -24.74053, 4.13981, 3.87261, for Canberra, Melbourne, and Perth, respectively. These mean that for every 1 mm increase in rainfall in that city, the overall average rainfall decrease by 24.74 mm when Canberra is looked at, and increases by 4.14 for Melbourne, for example. The interaction between city and period represents the additional effect these two variables have on average rainfall.</em></p>
+<pre class="r"><code># recompute linear regression
+library(lmtest)</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre class="r"><code>library(sandwich)
+coeftest(fit, vcov=vcovHC(fit))</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) -0.752046 NA NA NA
+## temp_cent 0.113916 NA NA NA
+## period 6.015298 NA NA NA
+## city_nameCANBERRA -24.740528 NA NA NA
+## city_nameMELBOURNE 4.139810 NA NA NA
+## city_namePERTH 3.872609 NA NA NA
+## city_nameSYDNEY 15.290896 NA NA NA
+## temp_cent:period 0.056605 NA NA NA
+## temp_cent:city_nameCANBERRA 0.555377 NA NA NA
+## temp_cent:city_nameMELBOURNE 0.045126 NA NA NA
+## temp_cent:city_namePERTH 0.023917 NA NA NA
+## temp_cent:city_nameSYDNEY -0.373750 NA NA NA
+## period:city_nameCANBERRA 21.833638 NA NA NA
+## period:city_nameMELBOURNE -4.464819 NA NA NA
+## period:city_namePERTH -2.900747 NA NA NA
+## period:city_nameSYDNEY -13.084723 NA NA NA
+## temp_cent:period:city_nameCANBERRA -0.695776 NA NA NA
+## temp_cent:period:city_nameMELBOURNE -0.154797 NA NA NA
+## temp_cent:period:city_namePERTH -0.276836 NA NA NA
+## temp_cent:period:city_nameSYDNEY 0.073313 NA NA NA</code></pre>
+<pre class="r"><code># R-squared
+(sum((climate$rainfall-mean(climate$rainfall))^2)-sum(fit$residuals^2))/sum((climate$rainfall-mean(climate$rainfall))^2)</code></pre>
+<pre><code>## [1] 0.03061277</code></pre>
+<p><em>According to the residuals vs fitted values plot, the data does not meet the homoskedasticity and linearity assumptions and the histogram of residuals proves the data does not meet normality either. The regression was repeated with heteroskedasticity robust standard errors and only Melbourne, period, and their interaction were significantly affecting average rainfall. The p-value increased for both Melbourne and the interaction with period. The R-squared is 0.03061277m therefore our model explains 3.07% of the variation in rainfall</em></p>
+</div>
+<div id="bootstrapped-standard-errors-on-a-regression-model" class="section level2">
+<h2>Bootstrapped Standard Errors on a Regression Model</h2>
+<pre class="r"><code>set.seed(348)
+samp_distn &lt;- replicate(5000, {
+boot_dat &lt;- sample_frac(climate, replace = T) # bootstrap data 
+fit2 &lt;- lm(rainfall~temp_cent*period*city_name, data = boot_dat) # fit model
+coef(fit2) #save coefs
+})
+
+# estimated SEs
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
+<pre><code>## (Intercept) temp_cent period city_nameCANBERRA
+city_nameMELBOURNE city_namePERTH
+## 1 0.5439393 0.07656338 0.5224808 40.27626 0.875922
+2.185579
+## city_nameSYDNEY temp_cent:period
+temp_cent:city_nameCANBERRA temp_cent:city_nameMELBOURNE
+## 1 4.466092 0.07447318 7.804674 0.1309745
+## temp_cent:city_namePERTH temp_cent:city_nameSYDNEY
+period:city_nameCANBERRA
+## 1 0.3223162 0.06403203 NA
+## period:city_nameMELBOURNE period:city_namePERTH
+period:city_nameSYDNEY
+## 1 0.8587331 2.163729 NA
+## temp_cent:period:city_nameCANBERRA
+temp_cent:period:city_nameMELBOURNE
+## 1 NA 0.1283463
+## temp_cent:period:city_namePERTH
+temp_cent:period:city_nameSYDNEY
+## 1 0.3196833 NA</code></pre>
+<p><em>The standard errors of Canberra, Perth, temp_cent:Canberra, and period:Perth increased the most, and only the SE of Sydney decreased. No SEs were given for period:Canberra, period:Sydney even though the original linear model previously gave them.</em></p>
+</div>
+<div id="logistic-regression" class="section level2">
+<h2>Logistic Regression</h2>
+<pre class="r"><code># create binary variable
+climate$temp_type &lt;- ifelse(climate$temp_type==&#39;max&#39;, 1,0)
+
+# logistic regression
+fit3 &lt;- glm(temp_type~rainfall*period*city_name*temperature, data=climate, family=binomial(link=&quot;logit&quot;)) ; summary(fit3)</code></pre>
+<pre><code>##
+## Call:
+## glm(formula = temp_type ~ rainfall * period * city_name
+* temperature,
+## family = binomial(link = &quot;logit&quot;), data = climate)
+##
+## Deviance Residuals:
+## Min 1Q Median 3Q Max
+## -4.3761 -0.4896 0.0002 0.5259 3.9310
+##
+## Coefficients: (2 not defined because of singularities)
+## Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) -1.343e+01 6.242e-01 -21.514 &lt; 2e-16 ***
+## rainfall 2.028e-02 2.598e-02 0.781 0.4350
+## period 6.726e-02 5.365e-01 0.125 0.9002
+## city_nameCANBERRA 5.078e+01 5.374e+02 0.094 0.9247
+## city_nameMELBOURNE 7.117e+00 1.172e+00 6.074 1.25e-09
+***
+## city_namePERTH 3.474e+00 4.805e+00 0.723 0.4697
+## city_nameSYDNEY 3.173e+01 4.447e+02 0.071 0.9431
+## temperature 6.299e-01 2.859e-02 22.036 &lt; 2e-16 ***
+## rainfall:period -2.748e-02 1.802e-02 -1.525 0.1272
+## rainfall:city_nameCANBERRA -1.490e-01 1.380e+01 -0.011
+0.9914
+## rainfall:city_nameMELBOURNE 5.301e-02 6.656e-02 0.796
+0.4258
+## rainfall:city_namePERTH 1.720e-01 3.807e-01 0.452 0.6513
+## rainfall:city_nameSYDNEY 2.237e-02 1.509e-02 1.482
+0.1382
+## period:city_nameCANBERRA -4.252e+01 5.374e+02 -0.079
+0.9369
+## period:city_nameMELBOURNE -4.761e-01 1.110e+00 -0.429
+0.6679
+## period:city_namePERTH -1.861e+00 4.770e+00 -0.390 0.6964
+## period:city_nameSYDNEY -2.675e+01 4.447e+02 -0.060
+0.9520
+## rainfall:temperature -1.378e-03 1.182e-03 -1.167 0.2434
+## period:temperature -3.664e-03 2.454e-02 -0.149 0.8813
+## city_nameCANBERRA:temperature -2.292e+00 2.682e+01
+-0.085 0.9319
+## city_nameMELBOURNE:temperature -1.527e-01 7.319e-02
+-2.087 0.0369 *
+## city_namePERTH:temperature -3.231e-02 3.083e-01 -0.105
+0.9165
+## city_nameSYDNEY:temperature -1.574e+00 2.228e+01 -0.071
+0.9437
+## rainfall:period:city_nameCANBERRA 1.681e-01 1.380e+01
+0.012 0.9903
+## rainfall:period:city_nameMELBOURNE -5.664e-03 6.071e-02
+-0.093 0.9257
+## rainfall:period:city_namePERTH -2.360e-01 3.768e-01
+-0.626 0.5311
+## rainfall:period:city_nameSYDNEY NA NA NA NA
+## rainfall:period:temperature 1.272e-03 8.252e-04 1.541
+0.1233
+## rainfall:city_nameCANBERRA:temperature 1.085e-03
+7.094e-01 0.002 0.9988
+## rainfall:city_nameMELBOURNE:temperature -4.754e-03
+3.956e-03 -1.202 0.2294
+## rainfall:city_namePERTH:temperature -7.638e-03 2.478e-02
+-0.308 0.7579
+## rainfall:city_nameSYDNEY:temperature -2.762e-04
+6.956e-04 -0.397 0.6913
+## period:city_nameCANBERRA:temperature 2.042e+00 2.682e+01
+0.076 0.9393
+## period:city_nameMELBOURNE:temperature 2.179e-02
+7.023e-02 0.310 0.7564
+## period:city_namePERTH:temperature 1.265e-01 3.066e-01
+0.413 0.6798
+## period:city_nameSYDNEY:temperature 1.401e+00 2.228e+01
+0.063 0.9499
+## rainfall:period:city_nameCANBERRA:temperature -3.174e-03
+7.094e-01 -0.004 0.9964
+## rainfall:period:city_nameMELBOURNE:temperature 1.099e-03
+3.611e-03 0.304 0.7608
+## rainfall:period:city_namePERTH:temperature 1.486e-02
+2.457e-02 0.605 0.5454
+## rainfall:period:city_nameSYDNEY:temperature NA NA NA NA
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## (Dispersion parameter for binomial family taken to be 1)
+##
+## Null deviance: 116328 on 83912 degrees of freedom
+## Residual deviance: 59797 on 83875 degrees of freedom
+## AIC: 59873
+##
+## Number of Fisher Scoring iterations: 10</code></pre>
+<p><em>The coefficient estimate for the city of Melbourne is positive (7.117), meaning that all else equal, Melbourne temperature readings are more likely to predict minimum and maximum temperature than any other city. Temperature also had a positive coefficient estimate (6.299e-01), but the interaction between Melbourne and temperature did not(-1.527e-01)</em></p>
+<pre class="r"><code># confusion matrix
+prob &lt;- predict(fit3, type = &quot;response&quot;) 
+table(xpredict = as.numeric(prob &gt; 0.5), truth = climate$temp_type) %&gt;% addmargins</code></pre>
+<pre><code>##         truth
+## xpredict     0     1   Sum
+##      0   34240  7119 41359
+##      1    7707 34847 42554
+##      Sum 41947 41966 83913</code></pre>
+<pre class="r"><code>(34240+34847)/83913 # accuracy</code></pre>
+<pre><code>## [1] 0.823317</code></pre>
+<pre class="r"><code>34847/41966 # sensitivity</code></pre>
+<pre><code>## [1] 0.8303627</code></pre>
+<pre class="r"><code>34240/41947 # specificity</code></pre>
+<pre><code>## [1] 0.8162681</code></pre>
+<pre class="r"><code>34847/42554 # precision</code></pre>
+<pre><code>## [1] 0.8188889</code></pre>
+<p><em>The confusion matrix shows that our model has a precision of 81.89%. It correctly predicts maximum temperature type 83.04% of the time, and correctly predicts minimum temperature 81.63% of the time. Overall, the model has an accuracy of 82.33%.</em></p>
+<pre class="r"><code># density plot of log-odds
+climate$logit&lt;-predict(fit3,type=&quot;link&quot;)
+
+climate%&gt;%ggplot(aes(logit,color=city_name,fill=city_name))+geom_density(alpha=.4)+ theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab(&quot;predictor (logit)&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-9-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># ROC curve
+library(plotROC)
+ROCprob &lt;- ggplot(climate) + geom_roc(aes(d = temp_type, m = prob),
+n.cuts = 0) ; ROCprob</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-10-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># AUC calculation
+calc_auc(ROCprob)</code></pre>
+<pre><code>##   PANEL group    AUC
+## 1     1    -1 0.9187</code></pre>
+<p><em>The AUC has a value of 0.9187, indicating that the logistic regression is a great model for predicting minimum and maximum temperature in celsius.</em></p>
+<pre class="r"><code>## GIVE IT PREDICTED PROBS AND TRUTH LABELS, RETURNS VARIOUS DIAGNOSTICS
+class_diag &lt;- function(probs,truth){
+#CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV 
+  tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth) 
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+
+  if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE) truth&lt;-as.numeric(truth)-1
+   
+  #CALCULATE EXACT AUC
+  ord&lt;-order(probs, decreasing=TRUE)
+  probs &lt;- probs[ord]; truth &lt;- truth[ord]
+
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+
+  dup&lt;-c(probs[-1]&gt;=probs[-length(probs)], FALSE) 
+  TPR&lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+  n &lt;- length(TPR)
+  auc&lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,auc) 
+}
+
+# 10-fold cross validation
+set.seed(1234)
+k=10 #choose number of folds
+
+data&lt;-climate[sample(nrow(climate)),] #randomly order rows 
+folds&lt;-cut(seq(1:nrow(climate)),breaks=k,labels=F) #create folds
+
+diags&lt;-NULL 
+for(i in 1:k){
+  ## Create training and test sets
+  train&lt;-data[folds!=i,] 
+  test&lt;-data[folds==i,]
+  truth&lt;-test$temp_type ## Truth labels for fold i
+  ## Train model on training set (all but fold i)
+  fit4&lt;-glm(temp_type~rainfall*period*city_name*temperature,data=train,family=&quot;binomial&quot;) 
+  ## Test model on test set (fold i)
+  probs&lt;-predict(fit4,newdata = test,type=&quot;response&quot;)
+  ## Get diagnostics for fold i
+  diags&lt;-rbind(diags,class_diag(probs,truth)) 
+}
+
+data.frame(acc=mean(diags$acc), sens=mean(diags$sens), spec=mean(diags$spec), ppv=mean(diags$ppv), auc=mean(diags$auc))</code></pre>
+<pre><code>##         acc      sens      spec       ppv       auc
+## 1 0.8231263 0.8302772 0.8159537 0.8186086 0.9184488</code></pre>
+<p><em>The model has a precision of 81.86%. It correctly predicts maximum temperature type 83.04% of the time, and correctly predicts minimum temperature 81.59% of the time. Overall, the model has an accuracy of 82.31%. The AUC value is great, at 0.9185138. There are no signs of overfitting since the values are very similar to those from the model confusion matrix.</em></p>
+</div>
+<div id="lasso-regression" class="section level2">
+<h2>LASSO Regression</h2>
+<pre class="r"><code># LASSO regression
+library(glmnet)
+set.seed(1234)
+y &lt;- as.matrix(climate$temp_type) #grab response
+x &lt;- model.matrix(fit3)[, -1] #grab predictors
+x &lt;- scale(x)
+cv.lasso1 &lt;- cv.glmnet(x, y, family = &quot;binomial&quot;)
+lasso1 &lt;- glmnet(x, y, family = &quot;binomial&quot;, lambda = cv.lasso1$lambda.1se) 
+coef(lasso1)</code></pre>
+<pre><code>## 40 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+## s0
+## (Intercept) -0.0514189931
+## rainfall -0.0277538148
+## period -0.0037827892
+## city_nameCANBERRA 0.9568895999
+## city_nameMELBOURNE 1.3984485983
+## city_namePERTH .
+## city_nameSYDNEY 0.8696877766
+## temperature 3.2596304289
+## rainfall:period .
+## rainfall:city_nameCANBERRA .
+## rainfall:city_nameMELBOURNE .
+## rainfall:city_namePERTH .
+## rainfall:city_nameSYDNEY 0.1325527448
+## period:city_nameCANBERRA 0.2483196151
+## period:city_nameMELBOURNE .
+## period:city_namePERTH .
+## period:city_nameSYDNEY .
+## rainfall:temperature -0.0508575316
+## period:temperature .
+## city_nameCANBERRA:temperature .
+## city_nameMELBOURNE:temperature .
+## city_namePERTH:temperature 0.9075499346
+## city_nameSYDNEY:temperature -0.1727050445
+## rainfall:period:city_nameCANBERRA .
+## rainfall:period:city_nameMELBOURNE .
+## rainfall:period:city_namePERTH -0.0050819397
+## rainfall:period:city_nameSYDNEY 0.0186385382
+## rainfall:period:temperature .
+## rainfall:city_nameCANBERRA:temperature -0.0362279295
+## rainfall:city_nameMELBOURNE:temperature -0.0362618076
+## rainfall:city_namePERTH:temperature 0.1555029553
+## rainfall:city_nameSYDNEY:temperature .
+## period:city_nameCANBERRA:temperature -0.3163757265
+## period:city_nameMELBOURNE:temperature .
+## period:city_namePERTH:temperature .
+## period:city_nameSYDNEY:temperature -0.0347822809
+## rainfall:period:city_nameCANBERRA:temperature
+-0.0002719041
+## rainfall:period:city_nameMELBOURNE:temperature
+-0.0014284518
+## rainfall:period:city_namePERTH:temperature .
+## rainfall:period:city_nameSYDNEY:temperature .</code></pre>
+<pre class="r"><code># 10-fold cross validation
+# new binary variables for those with non-zero LASSO coef estimates
+climate$city_Can &lt;- ifelse(climate$city_name==&quot;CANBERRA&quot;,1,0)
+climate$city_Mel &lt;- ifelse(climate$city_name==&quot;MELBOURNE&quot;,1,0)
+climate$city_Syd &lt;- ifelse(climate$city_name==&quot;SYDNEY&quot;,1,0)
+
+set.seed(1234)
+k=10 #choose number of folds
+
+data&lt;-climate[sample(nrow(climate)),] #randomly order rows 
+folds&lt;-cut(seq(1:nrow(climate)),breaks=k,labels=F) #create folds
+
+diags&lt;-NULL 
+for(i in 1:k){
+  ## Create training and test sets
+  train&lt;-data[folds!=i,] 
+  test&lt;-data[folds==i,]
+  truth&lt;-test$temp_type ## Truth labels for fold i
+  ## Train model on training set (all but fold i)
+  fit5&lt;-glm(temp_type~rainfall*period*city_Mel*city_Can*city_Syd*temperature,data=train,family=&quot;binomial&quot;) 
+  ## Test model on test set (fold i)
+  probs&lt;-predict(fit5,newdata = test,type=&quot;response&quot;)
+  ## Get diagnostics for fold i
+  diags&lt;-rbind(diags,class_diag(probs,truth)) 
+}
+
+data.frame(acc=mean(diags$acc), sens=mean(diags$sens), spec=mean(diags$spec), ppv=mean(diags$ppv), auc=mean(diags$auc))</code></pre>
+<pre><code>##         acc      sens      spec       ppv       auc
+## 1 0.7940128 0.8034899 0.7845101 0.7886021 0.8975953</code></pre>
+<p><em>The LASSO regression had non-zero coefficient estimates for rainfall, period, the cities of Melbourne, Canberra, and Sydney, and temperature. Perth had a slightly smaller p-value in the logistic regression but it was still significant. However, when present in an interaction with rainfall, period, and temperature, Perth had a non-zero coefficient estimate.</em></p>
+<p><em>The accuracy of the LASSO regression was slightly smaller than the logistic regression (79.40%)</em></p>
+</div>
+</div>
