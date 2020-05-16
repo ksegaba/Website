@@ -58,3 +58,5 @@ sns.heatmap(data, cmap="YlGnBu")
 ```
 This heatmap shows the trends in life expectancy per continent. It appears that Oceania has the longest life expectancy and Asia has the most improved life expectancy over the years.
 
+### Reference
+https://cmdlinetips.com/2019/01/how-to-make-heatmap-with-seaborn-in-python/
