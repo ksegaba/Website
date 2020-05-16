@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1589604105523.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "A6934AAF",
+    "lastKnownWriteTime" : 1589604128,
+    "last_content_update" : 1589604128536,
+    "path" : "~/Website/content/blog/2020-05-15-heatmaps-in-python.Rmarkdown",
+    "project_path" : "content/blog/2020-05-15-heatmaps-in-python.Rmarkdown",
+    "properties" : {
+        "cursorPosition" : "49,3",
+        "scrollLine" : "36"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

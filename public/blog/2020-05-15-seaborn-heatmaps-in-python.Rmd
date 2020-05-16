@@ -1,0 +1,60 @@
+---
+title: "Seaborn Heatmaps in Python"
+author: "Kenia E. Segura Abá"
+date: '2020-05-15'
+description: ''
+slug: seaborn-heatmaps-in-python
+tags: []
+categories: []
+---
+
+### **Introduction**
+
+This tutorial will show you how to create a heatmap in python using seaborn. However, we must first install the R package reticulate in order to run python code in R.
+
+To install reticulate, use the code below:
+
+```{R}
+#install.packages("reticulate")
+library(reticulate) # load the package onto our current R session
+```
+
+### Loading Python Libraries
+
+Luckily, I have a mac, so Python is already installed on my machine. Make sure you have Python in your machine for this package to access!
+
+Now, let's import the seaborn python modules.
+
+```{r}
+# install python packages
+# py_install('seaborn')
+```
+
+```{python}
+# import the python libraries
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+```
+
+### Seaborn Heatmap in R
+
+Now that we're all setup, lets load an example dataset, ```gapminder```, which provides values for life expectancy, GDP per capita, and population, every five years, from 1952 to 2007, for each of 142 countries. The dataset is available at www.gapminder.org.
+
+```{python}
+data_url = 'http://bit.ly/2cLzoxH'
+gapminder = pd.read_csv(data_url)
+print(gapminder.head(3))
+```
+
+Our data is tidy, so we need to convert the data to wider form to facilitate making the heatmap.
+```{python}
+data = pd.pivot_table(gapminder, values='lifeExp', index=['continent'], columns='year')
+```
+
+Now let's plot our heatmap!
+```{python}
+sns.heatmap(data, cmap="YlGnBu")
+```
+This heatmap shows the trends in life expectancy per continent. It appears that Oceania has the longest life expectancy and Asia has the most improved life expectancy over the years.
+
