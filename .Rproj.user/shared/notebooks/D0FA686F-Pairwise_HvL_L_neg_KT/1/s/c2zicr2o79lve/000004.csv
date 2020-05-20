@@ -1,0 +1,2 @@
+"0","# fungus"
+"0","negpw <- pairwise(LMneg, groups = class$Fungus); summary(negpw, confidence = 0.95, stat.table = T)"

@@ -1,0 +1,33 @@
+"0","negcoef <- coef(LMneg, test = T) ; summary(negcoef)
+"
+"1","
+Linear Model fit with lm.rrpp
+"
+"1","
+Number of observations: 86"
+"1","
+Number of dependent variables: 591"
+"1","
+Data space dimensions: 85"
+"1","
+Sums of Squares and Cross-products: Type III"
+"1","
+Number of permutations: 1000"
+"1","
+
+Statistics (distances) of coefficients with "
+"1","95"
+"1"," "
+"1","percent confidence intervals,"
+"1","
+effect sizes, and probabilities of exceeding observed values based on
+"
+"1","1000"
+"1"," "
+"1","random permutations using"
+"1"," "
+"1","RRPP"
+"1"," "
+"1","
+
+"

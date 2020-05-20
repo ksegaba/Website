@@ -1,0 +1,3 @@
+"0",""
+"0","# pca plot"
+"0","Opcplot <- plot(LMneg, type = ""PC"", pch = 19, col = interaction(class$Water, class$Fungus))"

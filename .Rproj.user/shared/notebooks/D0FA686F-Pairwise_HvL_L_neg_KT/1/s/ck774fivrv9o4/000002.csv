@@ -1,0 +1,36 @@
+"0","LMneg <- lm.rrpp(scaled_Y ~ Block * Water * Fungus * Age, data = class, SS.type = ""III"", print.progress = F); summary(LMneg)
+"
+"1","
+Warning: Because variables in the linear model are redundant,"
+"1","
+the linear model design has been truncated (via QR decomposition)."
+"1","
+Original X columns:"
+"1"," "
+"1","72"
+"1","
+Final X columns (rank):"
+"1"," "
+"1","66"
+"1","
+Check coefficients or degrees of freedom in ANOVA to see changes.
+
+"
+"1","
+Linear Model fit with lm.rrpp
+"
+"1","
+Number of observations: 86"
+"1","
+Number of dependent variables: 591  "
+"1","
+Data space dimensions: 85  "
+"1","
+Sums of Squares and Cross-products: Type III"
+"1","
+Number of permutations: 1000"
+"1","
+
+Full Model Analysis of Variance
+
+"

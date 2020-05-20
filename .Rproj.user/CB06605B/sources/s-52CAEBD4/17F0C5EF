@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1589760336279.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "81|6|149|0|\n150|9|176|0|\n177|28|188|0|\n189|21|223|3|\n227|14|474|0|\n229|7|320|0|\n321|6|389|0|\n390|9|416|0|\n417|28|428|0|\n429|21|463|0|\n",
+    "hash" : "908754610",
+    "id" : "17F0C5EF",
+    "lastKnownWriteTime" : 1589762800,
+    "last_content_update" : 1589769383453,
+    "path" : "~/Pairwise_HvL_L_neg_KT.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "78,3",
+        "last_setup_crc32" : "52CAEBD4760dc117",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

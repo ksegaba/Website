@@ -1,0 +1,2 @@
+"0","# residuals vs fitted values (homoscedasticity check)"
+"0","Odiagnostics <- plot(LMneg, type = ""diagnostics"")"

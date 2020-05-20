@@ -1,0 +1,5 @@
+"0","path <- ""~/Box/Summer 2018 TX Endo Field Samples and Analysis/Statistics/Kenia_Thesis_Analysis/XCMS Online Results/Pairwise High vs Low/"""
+"0",""
+"0","L_neg <- read_tsv(paste(path,""HvL_L_neg/XCMS.annotated.diffreport..High_F_Lneg_Kenia_Thesis.vs.Low_F_Lneg_Kenia_Thesis.tsv"", sep=""""))"
+"2","Error in (function (srcref)  : unimplemented type (29) in 'eval'
+"
